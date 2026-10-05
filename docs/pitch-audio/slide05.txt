@@ -1,0 +1,2 @@
+en-US-AvaMultilingualNeural
+Here it is in action. Alex just speaks into her phone, and Duet logs it. Sam, on a laptop across town, sees every entry appear on the shared timeline, without refreshing. And if anyone asks, when did she last eat, Duet answers straight from the log.

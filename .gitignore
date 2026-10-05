@@ -1,0 +1,15 @@
+node_modules/
+dist/
+test-results/
+ios/
+server/.env
+server/data/*.db
+server/data/*.db-*
+.DS_Store
+*.log
+.env
+.env.local
+docs/duet-link.txt
+docs/duet-link-qr.png
+docs/*.tmp.pptx
+docs/.report-render.html

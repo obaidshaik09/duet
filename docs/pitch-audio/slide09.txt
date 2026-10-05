@@ -1,0 +1,2 @@
+en-US-AvaMultilingualNeural
+And this isn't just an idea. Duet is built and working today, as a website, an installable app, and an Android app. It passed all one hundred and fifteen automated checks, including live sync between two caregivers and offline use.

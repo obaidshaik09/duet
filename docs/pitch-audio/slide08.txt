@@ -1,0 +1,2 @@
+en-US-AvaMultilingualNeural
+Our model is simple. The core of Duet is free, forever: voice logging, unlimited caregivers, and live sync. Next, we plan Duet Plus, a small subscription with visit-ready reports for the pediatrician, long-term trends, and support for more than one child. And we'll partner with hospitals and birthing classes, so families get Duet before they even go home. And growth is built in: every family that signs up brings its own caregivers along.

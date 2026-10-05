@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Duet — Parenting Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --linen: #f4efe6;
+      --paper: #fffdf8;
+      --ink: #2a2622;
+      --muted: #6f675e;
+      --line: #e6ddd0;
+      --sage: #4f6f5c;
+      --sage-soft: #e4eee7;
+      --clay: #c46a4a;
+      --clay-soft: #f8e6de;
+      --sky: #5b6e8c;
+      --shadow: 0 18px 50px rgba(42, 38, 34, 0.10);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background:
+        radial-gradient(1200px 500px at 50% -10%, #fff8ee, transparent 60%),
+        var(--linen);
+      color: var(--ink);
+      font-family: "Source Sans 3", sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 28px 16px 40px;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 420px;
+      min-height: min(860px, calc(100vh - 56px));
+      background: var(--paper);
+      border: 1px solid #efe7da;
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 22px 22px 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand { display: flex; flex-direction: column; gap: 4px; }
+    .brand h1 {
+      font-family: Fraunces, serif;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .brand p { color: var(--muted); font-size: 14px; }
+
+    #caregiver {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 28px 8px 12px;
+      font: 600 13px/1 "Source Sans 3", sans-serif;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236f675e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+    }
+
+    nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin: 0 18px 8px;
+      padding: 5px;
+      background: #f3eee5;
+      border-radius: 14px;
+    }
+
+    nav button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 9px 6px;
+      font: 600 13px/1 "Source Sans 3", sans-serif;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 0 rgba(42, 38, 34, 0.04);
+    }
+
+    main {
+      flex: 1;
+      padding: 8px 22px 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel { display: none; flex: 1; flex-direction: column; min-height: 0; }
+    .panel.active { display: flex; }
+
+    .counts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .count {
+      background: #f7f2ea;
+      border-radius: 14px;
+      padding: 10px 8px 9px;
+      text-align: center;
+    }
+    .count b { display: block; font-size: 20px; }
+    .count span { color: var(--muted); font-size: 12px; }
+
+    .listen-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 16px;
+      padding: 8px 0 6px;
+    }
+
+    #mic {
+      width: 132px;
+      height: 132px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--clay);
+      color: #fff;
+      box-shadow: 0 14px 30px rgba(196, 106, 74, 0.28);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    #mic svg { width: 42px; height: 42px; fill: currentColor; }
+    #mic.listening {
+      background: var(--sage);
+      box-shadow: 0 14px 30px rgba(79, 111, 92, 0.28);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .hint { color: var(--muted); font-size: 14px; max-width: 280px; }
+    .hint strong { color: var(--ink); font-weight: 600; }
+
+    #transcript, #reply {
+      width: 100%;
+      border-radius: 16px;
+      padding: 12px 14px;
+      text-align: left;
+      min-height: 0;
+    }
+    #transcript:empty, #reply:empty { display: none; }
+    #transcript {
+      background: #f7f2ea;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    #reply {
+      background: var(--sage-soft);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .chip, .logged {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font: 600 12px/1 "Source Sans 3", sans-serif;
+      cursor: pointer;
+    }
+    .logged {
+      background: var(--clay-soft);
+      border-color: transparent;
+      cursor: default;
+    }
+
+    .fallback {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .fallback input {
+      flex: 1;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font: 400 15px/1.2 "Source Sans 3", sans-serif;
+      background: #fff;
+      color: var(--ink);
+    }
+    .fallback button, .ghost, .primary {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: 600 14px/1 "Source Sans 3", sans-serif;
+      cursor: pointer;
+    }
+    .fallback button, .primary { background: var(--ink); color: #fff; }
+    .ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .scroll {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 8px;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #f7f2ea;
+      border-radius: 16px;
+      padding: 12px 12px 12px 10px;
+    }
+    .badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      background: #fff;
+    }
+    .event h3 { font-size: 15px; font-weight: 600; }
+    .event p { color: var(--muted); font-size: 13px; }
+    .when { color: var(--muted); font-size: 12px; text-align: right; }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 36px 12px;
+      line-height: 1.5;
+    }
+
+    #summary-card {
+      background: #f7f2ea;
+      border-radius: 18px;
+      padding: 18px 16px;
+      white-space: pre-wrap;
+      line-height: 1.55;
+      font-size: 15px;
+      min-height: 220px;
+    }
+
+    .row { display: flex; gap: 8px; margin-top: 12px; }
+    .row .primary, .row .ghost { flex: 1; }
+
+    footer {
+      padding: 0 22px calc(16px + var(--safe-b));
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    footer button {
+      border: 0;
+      background: none;
+      color: var(--sage);
+      font: 600 12px/1 "Source Sans 3", sans-serif;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      #app {
+        max-width: none;
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <h1>Duet</h1>
+        <p id="baby-line">Nora · first 12 weeks</p>
+      </div>
+      <label class="sr-only" for="caregiver" style="position:absolute;left:-9999px">Caregiver</label>
+      <select id="caregiver" aria-label="Who is caring right now"></select>
+    </header>
+
+    <nav>
+      <button data-tab="listen" class="active">Listen</button>
+      <button data-tab="today">Today</button>
+      <button data-tab="summary">Summary</button>
+    </nav>
+
+    <main>
+      <section id="listen" class="panel active">
+        <div class="counts" id="listen-counts"></div>
+        <div class="listen-stage">
+          <button id="mic" type="button" aria-label="Start talking">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg>
+          </button>
+          <p class="hint" id="mic-hint">Tap the button and talk naturally — a feed, a nap, a diaper change.</p>
+          <div id="transcript"></div>
+          <div id="reply"></div>
+          <div class="chips" id="logged"></div>
+          <div class="chips" id="suggestions">
+            <button class="chip" data-say="Just gave her a 3 ounce bottle.">3 oz bottle</button>
+            <button class="chip" data-say="She's down for a nap.">Down for a nap</button>
+            <button class="chip" data-say="Changed a wet diaper.">Wet diaper</button>
+            <button class="chip" data-say="When did she last eat?">Last feed?</button>
+          </div>
+        </div>
+        <form class="fallback" id="text-form">
+          <input id="text-input" name="text" autocomplete="off" placeholder="Or type if you can't talk right now" />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <section id="today" class="panel">
+        <div class="counts" id="today-counts"></div>
+        <div class="scroll" id="timeline"></div>
+      </section>
+
+      <section id="summary" class="panel">
+        <div id="summary-card">Today's note will appear here.</div>
+        <div class="row">
+          <button class="primary" id="make-summary" type="button">Make today's note</button>
+          <button class="ghost" id="copy-summary" type="button">Copy</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Duet keeps the household in sync. It does not give medical advice.
+      <button id="reset" type="button">Reset demo day</button>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "duet-household-v1";
+    const BABY = { name: "Nora", born: "2026-07-30" };
+    const CAREGIVERS = [
+      { id: "alex", name: "Alex", role: "Parent" },
+      { id: "sam", name: "Sam", role: "Partner" },
+      { id: "maya", name: "Maya", role: "Grandparent" },
+      { id: "jordan", name: "Jordan", role: "Night nurse" }
+    ];
+
+    const MEDICAL_RE = /\b(tylenol|acetaminophen|ibuprofen|motrin|advil|aspirin|antibiotic|medicine|medication|dose|fever|temperature|degrees|rash|vomit|vomiting|seizure|breathing|diagnose|diagnosis|pediatrician said|is this normal|should i|sick|illness|infection|vaccine|immunization|colic medicine|reflux med|benadryl|what's wrong|what is wrong|emergency|er\b|hospital)\b/i;
+
+    const state = loadState();
+
+    const els = {
+      caregiver: document.getElementById("caregiver"),
+      babyLine: document.getElementById("baby-line"),
+      mic: document.getElementById("mic"),
+      micHint: document.getElementById("mic-hint"),
+      transcript: document.getElementById("transcript"),
+      reply: document.getElementById("reply"),
+      logged: document.getElementById("logged"),
+      listenCounts: document.getElementById("listen-counts"),
+      todayCounts: document.getElementById("today-counts"),
+      timeline: document.getElementById("timeline"),
+      summaryCard: document.getElementById("summary-card"),
+      textForm: document.getElementById("text-form"),
+      textInput: document.getElementById("text-input")
+    };
+
+    let recognition = null;
+    let listening = false;
+    let latestSummary = "";
+
+    function weekOfLife() {
+      const born = new Date(BABY.born + "T00:00:00");
+      const days = Math.floor((Date.now() - born.getTime()) / 86400000);
+      return Math.max(1, Math.min(12, Math.floor(days / 7) || 1));
+    }
+
+    function nowIso() { return new Date().toISOString(); }
+
+    function todayKey(d = new Date()) {
+      return d.toLocaleDateString("en-CA");
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.events)) return parsed;
+        }
+      } catch (err) { /* start fresh */ }
+      return { caregiverId: "alex", events: seedEvents() };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function hoursAgo(h, extraMin = 0) {
+      return new Date(Date.now() - (h * 60 + extraMin) * 60000).toISOString();
+    }
+
+    function seedEvents() {
+      return [
+        { id: "s1", type: "feed", subtype: "breast_left", durationMin: 12, occurredAt: hoursAgo(7, 20), caregiverId: "alex" },
+        { id: "s2", type: "diaper", subtype: "wet", occurredAt: hoursAgo(6, 40), caregiverId: "alex" },
+        { id: "s3", type: "nap", subtype: "nap_start", occurredAt: hoursAgo(6, 10), caregiverId: "alex" },
+        { id: "s4", type: "nap", subtype: "nap_end", durationMin: 48, occurredAt: hoursAgo(5, 22), caregiverId: "alex" },
+        { id: "s5", type: "feed", subtype: "bottle", amountMl: 90, occurredAt: hoursAgo(4, 5), caregiverId: "sam" },
+        { id: "s6", type: "diaper", subtype: "dirty", occurredAt: hoursAgo(3, 15), caregiverId: "sam" },
+        { id: "s7", type: "feed", subtype: "bottle", amountMl: 75, occurredAt: hoursAgo(1, 50), caregiverId: "maya" }
+      ];
+    }
+
+    function caregiverById(id) {
+      return CAREGIVERS.find((c) => c.id === id) || CAREGIVERS[0];
+    }
+
+    function todaysEvents() {
+      const key = todayKey();
+      return state.events
+        .filter((e) => todayKey(new Date(e.occurredAt)) === key)
+        .sort((a, b) => new Date(a.occurredAt) - new Date(b.occurredAt));
+    }
+
+    function lastOfType(type) {
+      return [...todaysEvents()].reverse().find((e) => e.type === type && e.subtype !== "nap_start")
+        || [...todaysEvents()].reverse().find((e) => e.type === type);
+    }
+
+    function openNap() {
+      const events = todaysEvents();
+      let open = null;
+      for (const event of events) {
+        if (event.type === "nap" && event.subtype === "nap_start") open = event;
+        if (event.type === "nap" && event.subtype === "nap_end") open = null;
+      }
+      return open;
+    }
+
+    function parseRelativeTime(text) {
+      const ago = text.match(/(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)\s+ago/i);
+      if (ago) {
+        const n = parseFloat(ago[1]);
+        const mins = /hour|hr/i.test(ago[2]) ? n * 60 : n;
+        return new Date(Date.now() - mins * 60000).toISOString();
+      }
+      return nowIso();
+    }
+
+    function mlFromText(text) {
+      const oz = text.match(/(\d+(?:\.\d+)?)\s*(oz|ounce|ounces)\b/i);
+      if (oz) return Math.round(parseFloat(oz[1]) * 30);
+      const ml = text.match(/(\d+(?:\.\d+)?)\s*(ml|milliliters?)\b/i);
+      if (ml) return Math.round(parseFloat(ml[1]));
+      return null;
+    }
+
+    function minutesFromText(text) {
+      const m = text.match(/(\d+)\s*(minutes?|mins?)\b/i);
+      return m ? parseInt(m[1], 10) : null;
+    }
+
+    function isQuery(text) {
+      return /when|how many|last (feed|eat|bottle|nap|diaper)|did she|has she|who (logged|fed|changed)/i.test(text);
+    }
+
+    function interpret(raw) {
+      const text = raw.trim();
+      if (!text) return { intent: "unclear", events: [], reply: "I didn't catch that. Try a feed, a nap, or a diaper." };
+
+      if (MEDICAL_RE.test(text) || /\b(should we give|is she okay|is she alright)\b/i.test(text)) {
+        return {
+          intent: "medical",
+          events: [],
+          reply: "Duet can't give medical advice or help with symptoms or medicine. If you're worried, call your pediatrician or emergency services. I can still log a feed, nap, or diaper."
+        };
+      }
+
+      if (isQuery(text)) return answerQuery(text);
+
+      const events = [];
+      const occurredAt = parseRelativeTime(text);
+      const caregiverId = state.caregiverId;
+
+      const mentionsFeed = /\b(feed|fed|feeding|bottle|breast|nursed?|nursing|formula|ate|eat|ounce|oz|ml)\b/i.test(text);
+      const mentionsNap = /\b(nap|napping|asleep|sleeping|slept|put (her|him|them) down|down for|woke|she's up|shes up|up from)\b/i.test(text);
+      const mentionsDiaper = /\b(diaper|wet|dirty|poop|poopy|pee|soiled|blowout|changed)\b/i.test(text);
+
+      if (mentionsFeed) {
+        let subtype = "bottle";
+        if (/\bleft\b/i.test(text)) subtype = "breast_left";
+        else if (/\bright\b/i.test(text)) subtype = "breast_right";
+        else if (/\bbreast|nursed?|nursing\b/i.test(text)) subtype = "breast_left";
+        events.push({
+          id: uid(),
+          type: "feed",
+          subtype,
+          amountMl: mlFromText(text),
+          durationMin: minutesFromText(text),
+          occurredAt,
+          caregiverId
+        });
+      }
+
+      if (mentionsNap) {
+        const waking = /\b(woke|wake|up from|she's up|shes up|done napping|finished (her |the )?nap)\b/i.test(text);
+        const open = openNap();
+        if (waking && open) {
+          const durationMin = Math.max(1, Math.round((Date.now() - new Date(open.occurredAt).getTime()) / 60000));
+          events.push({ id: uid(), type: "nap", subtype: "nap_end", durationMin, occurredAt, caregiverId });
+        } else if (waking && !open) {
+          events.push({
+            id: uid(),
+            type: "nap",
+            subtype: "nap_end",
+            durationMin: minutesFromText(text),
+            occurredAt,
+            caregiverId
+          });
+        } else {
+          events.push({ id: uid(), type: "nap", subtype: "nap_start", occurredAt, caregiverId });
+        }
+      }
+
+      if (mentionsDiaper) {
+        let subtype = "wet";
+        if (/\b(both|wet and dirty)\b/i.test(text)) subtype = "both";
+        else if (/\b(dirty|poop|poopy|soiled|blowout)\b/i.test(text)) subtype = "dirty";
+        events.push({ id: uid(), type: "diaper", subtype, occurredAt, caregiverId });
+      }
+
+      if (!events.length) {
+        return {
+          intent: "unclear",
+          events: [],
+          reply: "I can log a feed, a nap, or a diaper — or answer when the last one happened."
+        };
+      }
+
+      return { intent: "log", events, reply: replyFor(events) };
+    }
+
+    function answerQuery(text) {
+      const events = todaysEvents();
+      if (/how many/.test(text) && /feed|bottle|ate/i.test(text)) {
+        const n = events.filter((e) => e.type === "feed").length;
+        return { intent: "query", events: [], reply: n ? `Nora has had ${n} feed${n === 1 ? "" : "s"} so far today.` : "No feeds logged yet today." };
+      }
+      if (/how many/.test(text) && /diaper/i.test(text)) {
+        const n = events.filter((e) => e.type === "diaper").length;
+        return { intent: "query", events: [], reply: n ? `${n} diaper${n === 1 ? "" : "s"} logged today.` : "No diapers logged yet today." };
+      }
+      if (/nap/i.test(text) && /last|when|is she/i.test(text)) {
+        const open = openNap();
+        if (open) {
+          return { intent: "query", events: [], reply: `Nora is still down. ${caregiverById(open.caregiverId).name} logged the start at ${fmtTime(open.occurredAt)}.` };
+        }
+        const last = [...events].reverse().find((e) => e.type === "nap");
+        return { intent: "query", events: [], reply: last ? `Last nap update was ${relTime(last.occurredAt)}, logged by ${caregiverById(last.caregiverId).name}.` : "No naps logged yet today." };
+      }
+      const last = lastOfType("feed");
+      if (last) {
+        const who = caregiverById(last.caregiverId).name;
+        return { intent: "query", events: [], reply: `Last feed was ${relTime(last.occurredAt)} — ${labelEvent(last)}, logged by ${who}.` };
+      }
+      return { intent: "query", events: [], reply: "Nothing is on today's log yet. Tell me about a feed, nap, or diaper." };
+    }
+
+    function replyFor(events) {
+      const bits = events.map((e) => {
+        if (e.type === "feed") return `Logged ${labelEvent(e).toLowerCase()}.`;
+        if (e.type === "nap" && e.subtype === "nap_start") return "Logged that Nora is down for a nap.";
+        if (e.type === "nap") return e.durationMin ? `Logged wake-up after about ${e.durationMin} minutes.` : "Logged that Nora is up.";
+        return `Logged a ${labelEvent(e).toLowerCase()}.`;
+      });
+      return bits.join(" ");
+    }
+
+    function uid() {
+      return "e" + Math.random().toString(36).slice(2, 9);
+    }
+
+    function ozFromMl(ml) {
+      if (!ml) return "";
+      const oz = ml / 30;
+      return Number.isInteger(oz) ? `${oz} oz` : `${oz.toFixed(1)} oz`;
+    }
+
+    function labelEvent(event) {
+      if (event.type === "feed") {
+        if (event.subtype === "breast_left") return event.durationMin ? `Left breast, ${event.durationMin} min` : "Left breast";
+        if (event.subtype === "breast_right") return event.durationMin ? `Right breast, ${event.durationMin} min` : "Right breast";
+        return event.amountMl ? `Bottle, ${ozFromMl(event.amountMl)}` : "Bottle";
+      }
+      if (event.type === "nap") {
+        if (event.subtype === "nap_start") return "Nap started";
+        return event.durationMin ? `Nap ended, ${event.durationMin} min` : "Nap ended";
+      }
+      if (event.subtype === "dirty") return "Dirty diaper";
+      if (event.subtype === "both") return "Wet and dirty diaper";
+      return "Wet diaper";
+    }
+
+    function iconFor(event) {
+      if (event.type === "feed") return "🍼";
+      if (event.type === "nap") return "🌙";
+      return "🧷";
+    }
+
+    function fmtTime(iso) {
+      return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function relTime(iso) {
+      const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+      if (mins < 1) return "just now";
+      if (mins < 60) return `${mins} min ago`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return m ? `${h}h ${m}m ago` : `${h}h ago`;
+    }
+
+    function counts() {
+      const events = todaysEvents();
+      const naps = events.filter((e) => e.type === "nap" && e.subtype === "nap_end").length
+        + (openNap() ? 1 : 0);
+      return {
+        feeds: events.filter((e) => e.type === "feed").length,
+        naps,
+        diapers: events.filter((e) => e.type === "diaper").length
+      };
+    }
+
+    function renderCounts(target) {
+      const c = counts();
+      target.innerHTML = `
+        <div class="count"><b>${c.feeds}</b><span>Feeds</span></div>
+        <div class="count"><b>${c.naps}</b><span>Naps</span></div>
+        <div class="count"><b>${c.diapers}</b><span>Diapers</span></div>
+      `;
+    }
+
+    function handleTurn(text) {
+      const result = interpret(text);
+      if (result.events.length) {
+        state.events.push(...result.events);
+        saveState();
+      }
+      els.transcript.textContent = text ? `“${text}”` : "";
+      els.reply.textContent = result.reply;
+      els.logged.innerHTML = result.events.map((e) => `<span class="logged">${labelEvent(e)}</span>`).join("");
+      render();
+    }
+
+    function render() {
+      els.babyLine.textContent = `${BABY.name} · week ${weekOfLife()} of 12`;
+      renderCounts(els.listenCounts);
+      renderCounts(els.todayCounts);
+
+      const events = [...todaysEvents()].reverse();
+      if (!events.length) {
+        els.timeline.innerHTML = `<p class="empty">Nothing logged yet today. Talk from the Listen tab and the household will see it here.</p>`;
+      } else {
+        els.timeline.innerHTML = events.map((event) => {
+          const who = caregiverById(event.caregiverId);
+          return `
+            <article class="event">
+              <div class="badge">${iconFor(event)}</div>
+              <div>
+                <h3>${labelEvent(event)}</h3>
+                <p>${who.name} · ${who.role}</p>
+              </div>
+              <div class="when">${fmtTime(event.occurredAt)}<br>${relTime(event.occurredAt)}</div>
+            </article>
+          `;
+        }).join("");
+      }
+    }
+
+    function buildSummary() {
+      const events = todaysEvents();
+      const c = counts();
+      const date = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+      const who = [...new Set(events.map((e) => caregiverById(e.caregiverId).name))];
+      const lines = [
+        `${BABY.name} · ${date} · week ${weekOfLife()} of 12`,
+        "",
+        `Feeds: ${c.feeds}`,
+        `Naps: ${c.naps}`,
+        `Diapers: ${c.diapers}`,
+        ""
+      ];
+      if (!events.length) {
+        lines.push("No care events were logged today.");
+      } else {
+        lines.push("Timeline");
+        events.forEach((event) => {
+          lines.push(`• ${fmtTime(event.occurredAt)} — ${labelEvent(event)} (${caregiverById(event.caregiverId).name})`);
+        });
+        const lastFeed = lastOfType("feed");
+        if (lastFeed) lines.push("", `Last feed: ${fmtTime(lastFeed.occurredAt)} · ${labelEvent(lastFeed)}`);
+        if (who.length) lines.push(`Logged by: ${who.join(", ")}`);
+      }
+      lines.push("", "This is a household log for organization only. It is not medical advice.");
+      return lines.join("\n");
+    }
+
+    function showTab(name) {
+      const allowed = ["listen", "today", "summary"];
+      const tab = allowed.includes(name) ? name : "listen";
+      document.querySelectorAll("nav button").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
+      document.querySelectorAll(".panel").forEach((panel) => panel.classList.toggle("active", panel.id === tab));
+      if (location.hash.slice(1) !== tab) history.replaceState(null, "", "#" + tab);
+    }
+
+    function setListening(on) {
+      listening = on;
+      els.mic.classList.toggle("listening", on);
+      els.micHint.innerHTML = on
+        ? "Listening… tap again when you are done."
+        : "Tap the button and talk naturally — a feed, a nap, a diaper change.";
+    }
+
+    function getRecognition() {
+      const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Ctor) return null;
+      const rec = new Ctor();
+      rec.lang = "en-US";
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.onresult = (event) => {
+        const bits = [...event.results].map((r) => r[0].transcript).join(" ").trim();
+        els.transcript.textContent = bits ? `“${bits}”` : "";
+        if (event.results[event.results.length - 1].isFinal) {
+          setListening(false);
+          handleTurn(bits);
+        }
+      };
+      rec.onerror = () => {
+        setListening(false);
+        els.reply.textContent = "I couldn't hear that. You can type below instead.";
+      };
+      rec.onend = () => setListening(false);
+      return rec;
+    }
+
+    CAREGIVERS.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.name} · ${c.role}`;
+      els.caregiver.appendChild(opt);
+    });
+    els.caregiver.value = state.caregiverId;
+    els.caregiver.addEventListener("change", () => {
+      state.caregiverId = els.caregiver.value;
+      saveState();
+    });
+
+    document.querySelectorAll("nav button").forEach((btn) => {
+      btn.addEventListener("click", () => showTab(btn.dataset.tab));
+    });
+    window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+
+    document.querySelectorAll("[data-say]").forEach((btn) => {
+      btn.addEventListener("click", () => handleTurn(btn.dataset.say));
+    });
+
+    els.textForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = els.textInput.value.trim();
+      if (!text) return;
+      els.textInput.value = "";
+      handleTurn(text);
+    });
+
+    els.mic.addEventListener("click", () => {
+      if (!recognition) recognition = getRecognition();
+      if (!recognition) {
+        els.reply.textContent = "Voice needs Chrome or Edge. Type below for now.";
+        els.textInput.focus();
+        return;
+      }
+      if (listening) {
+        recognition.stop();
+        setListening(false);
+        return;
+      }
+      els.reply.textContent = "";
+      els.logged.innerHTML = "";
+      setListening(true);
+      try { recognition.start(); }
+      catch (err) {
+        setListening(false);
+        els.reply.textContent = "Mic is busy. Type below, or try the button again.";
+      }
+    });
+
+    document.getElementById("make-summary").addEventListener("click", () => {
+      latestSummary = buildSummary();
+      els.summaryCard.textContent = latestSummary;
+    });
+
+    document.getElementById("copy-summary").addEventListener("click", async () => {
+      if (!latestSummary) latestSummary = buildSummary();
+      els.summaryCard.textContent = latestSummary;
+      try {
+        await navigator.clipboard.writeText(latestSummary);
+        document.getElementById("copy-summary").textContent = "Copied";
+        setTimeout(() => { document.getElementById("copy-summary").textContent = "Copy"; }, 1400);
+      } catch (err) {
+        els.reply.textContent = "Copy the note by selecting the text.";
+      }
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      state.events = seedEvents();
+      state.caregiverId = "alex";
+      els.caregiver.value = "alex";
+      latestSummary = "";
+      els.summaryCard.textContent = "Today's note will appear here.";
+      els.transcript.textContent = "";
+      els.reply.textContent = "Demo day reset. Morning is already logged so the household has something to share.";
+      els.logged.innerHTML = "";
+      saveState();
+      render();
+      showTab("listen");
+    });
+
+    if (location.protocol === "file:") {
+      els.micHint.innerHTML = "Open this page via a local server in <strong>Chrome or Edge</strong> for the mic. Typing still works here.";
+    }
+
+    render();
+    showTab(location.hash.slice(1) || "listen");
+    els.summaryCard.textContent = "Tap “Make today's note” for a short recap you can paste to a partner or bring to the pediatrician.";
+  </script>
+</body>
+</html>
